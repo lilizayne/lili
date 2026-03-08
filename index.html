@@ -1,450 +1,232 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>预约小助手</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: #f9eff6;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            padding: 16px 10px;
-            color: #5a4a64;
-        }
-        .app-container {
-            max-width: 600px;
-            width: 100%;
-            background: white;
-            border-radius: 40px;
-            box-shadow: 0 12px 30px rgba(210, 160, 200, 0.15);
-            padding: 24px 20px 30px;
-            border: 1px solid rgba(255,255,255,0.5);
-        }
-        .role-header {
-            display: flex;
-            background: #f7eef5;
-            border-radius: 60px;
-            padding: 5px;
-            margin-bottom: 24px;
-        }
-        .role-tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px 4px;
-            font-weight: 600;
-            font-size: 1rem;
-            border-radius: 40px;
-            transition: 0.2s;
-            cursor: pointer;
-            color: #886b8e;
-        }
-        .role-tab.active {
-            background: #ffffff;
-            color: #b96ba6;
-            box-shadow: 0 4px 10px rgba(180, 120, 160, 0.1);
-        }
-        .section-title {
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin: 10px 0 16px 0;
-            padding-left: 14px;
-            border-left: 6px solid #e0a5d9;
-            color: #995c9c;
-        }
-        /* 预约汇总样式 */
-        .summary-box {
-            background: #fdf5fc;
-            border-radius: 20px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #775c7a;
-            border: 1px solid #f2dff0;
-            white-space: pre-line;
-        }
-        .wheel-picker {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 14px;
-            justify-content: center;
-        }
-        .wheel-picker select {
-            padding: 10px 8px;
-            border-radius: 14px;
-            border: 1px solid #e8d5e7;
-            background: #fff;
-            font-size: 0.95rem;
-        }
-        .time-input-row {
-            background: #fdf5fc;
-            border-radius: 50px;
-            padding: 14px 16px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-        .time-input-row button {
-            flex: 1 1 auto;
-            background: #d984cc;
-            border: none;
-            color: white;
-            padding: 14px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        .slot-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 420px;
-            overflow-y: auto;
-            padding-right: 4px;
-            margin-top: 10px;
-        }
-        .slot-item {
-            background: white;
-            border-radius: 24px;
-            padding: 16px;
-            border: 1px solid #f2dff0;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .slot-time {
-            background: #f8e9f7;
-            padding: 6px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            color: #b15fa8;
-            font-size: 1rem;
-        }
-        .slot-status {
-            padding: 6px 14px;
-            border-radius: 40px;
-            background: #f5f0f5;
-            font-size: 0.9rem;
-        }
-        .slot-status.booked {
-            background: #ffeef2;
-            color: #c96582;
-        }
-        .slot-actions {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-            justify-content: flex-end;
-            margin-top: 8px;
-        }
-        .btn-small {
-            border: none;
-            background: transparent;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-weight: 500;
-            font-size: 0.85rem;
-            border: 1px solid #e8d5e7;
-            cursor: pointer;
-        }
-        .btn-edit { background: #fff0e1; color: #b8825a; border-color: #f6d9bc; }
-        .btn-cancel { background: #ffe5e9; color: #c95b76; border-color: #f7c4d0; }
-        .btn-small:disabled { opacity: 0.3; pointer-events: none; }
-        .available-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-height: 460px;
-            overflow-y: auto;
-        }
-        .book-card {
-            background: #fdf5fc;
-            border-radius: 28px;
-            padding: 16px 20px;
-            border: 1px solid #f0d9ed;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .book-time {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #a85ca0;
-        }
-        .book-btn {
-            background: #d984cc;
-            border: none;
-            color: white;
-            padding: 10px 22px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-        .book-btn:disabled {
-            background: #e5d2e4;
-            color: #999;
-        }
-        .warm-prompt {
-            background: #fcf0ff;
-            border-radius: 24px;
-            padding: 12px 16px;
-            font-size: 0.9rem;
-            color: #b96ba6;
-            margin: 12px 0 5px;
-        }
-        /* 密码弹窗样式 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .modal-box {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 300px;
-        }
-        .modal-box input {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #e8d5e7;
-            border-radius: 10px;
-        }
-        .modal-box button {
-            background: #d984cc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>预约小助手</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif;background:#f9eff6;min-height:100vh;display:flex;justify-content:center;padding:16px 10px;color:#5a4a6}
+.app-container{max-width:600px;width:100%;background:#fff;border-radius:40px;box-shadow:0 12px 30px rgba(210,160,200,.15);padding:24px 20px 30px;border:1px solid rgba(255,255,255,.5)}
+.role-header{display:flex;background:#f7eef5;border-radius:60px;padding:5px;margin-bottom:24px}
+.role-tab{flex:1;text-align:center;padding:12px 4px;font-weight:600;font-size:1rem;border-radius:40px;transition:.2s;cursor:pointer;color:#886b88}
+.role-tab.active{background:#fff;color:#b96ba6;box-shadow:0 4px 10px rgba(180,120,160,.1)}
+.section-title{font-weight:700;font-size:1.2rem;margin:10px 0 16px;padding-left:14px;border-left:6px solid #e0a5d9;color:#995c9c}
+.summary-box{background:#fdf5fc;border-radius:20px;padding:14px 16px;margin-bottom:16px;font-size:.95rem;line-height:1.6;color:#775c7a;border:1px solid #f2dff0;white-space:pre-line}
+.wheel-picker{display:flex;gap:6px;margin-bottom:14px;justify-content:center}
+.wheel-picker select{padding:10px 8px;border-radius:14px;border:1px solid #e8d5e7;background:#fff;font-size:.95rem}
+.time-input-row{background:#fdf5fc;border-radius:50px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;align-items:center}
+.time-input-row button{flex:1 1 auto;background:#d984cc;border:none;color:#fff;padding:14px 20px;border-radius:50px;font-weight:700;font-size:1rem;cursor:pointer}
+.slot-list{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;padding-right:4px;margin-top:10px}
+.slot-item{background:#fff;border-radius:24px;padding:16px;border:1px solid #f2dff0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.slot-time{background:#f8e9f7;padding:6px 18px;border-radius:40px;font-weight:600;color:#b15fa8;font-size:1rem}
+.slot-status{padding:6px 14px;border-radius:40px;background:#f5f0f5;font-size:.9rem}
+.slot-status.booked{background:#ffeef2;color:#c96582}
+.slot-actions{display:flex;gap:8px;width:100%;justify-content:flex-end;margin-top:8px}
+.btn-small{border:none;background:transparent;padding:6px 16px;border-radius:40px;font-weight:500;font-size:.85rem;border:1px solid #e8d5e7;cursor:pointer}
+.btn-edit{background:#fff0e1;color:#b88255;border-color:#f6d9bc}
+.btn-cancel{background:#ffe5e9;color:#c95b76;border-color:#f7c4d0}
+.btn-clear{background:#ffd6d6;color:#a83233;border-color:#f7baba}
+.btn-small:disabled{opacity:.3;pointer-events:none}
+.available-grid{display:flex;flex-direction:column;gap:12px;max-height:460px;overflow-y:auto}
+.book-card{background:#fdf5fc;border-radius:28px;padding:16px 20px;border:1px solid #f0d9ed;display:flex;align-items:center;justify-content:space-between}
+.book-time{font-weight:700;font-size:1rem;color:#a85ca0}
+.book-btn{background:#d984cc;border:none;color:#fff;padding:10px 22px;border-radius:40px;font-weight:600;font-size:.9rem;cursor:pointer}
+.book-btn:disabled{background:#e5d2e4;color:#999}
+.warm-prompt{background:#fcf0ff;border-radius:24px;padding:12px 16px;font-size:.9rem;color:#b96ba6;margin:12px 0 5px}
+.date-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.date-tab{padding:10px 16px;border-radius:20px;background:#fdf5fc;border:1px solid #f0d9ed;cursor:pointer;transition:.2s}
+.date-tab.active{background:#d984cc;color:#fff;border-color:#d984cc}
+.admin-date-group{margin-bottom:20px}
+.admin-date-title{font-size:1.1rem;font-weight:700;color:#995c9c;margin-bottom:10px;padding-left:4px}
+</style>
 </head>
 <body>
 <div class="app-container">
-    <div class="role-header">
-        <div class="role-tab" id="tabCounsellor">👩‍⚕️ 管理端</div>
-        <div class="role-tab active" id="tabCustomer">🧑 预约端</div>
+  <div class="role-header">
+    <div class="role-tab" id="tabCounsellor">👩‍⚕️ 管理端</div>
+    <div class="role-tab active" id="tabCustomer">🥰 预约端</div>
+  </div>
+
+  <div id="counsellorPanel" style="display:none;">
+    <div class="section-title">📌 设置可预约时间</div>
+    <div id="bookingSummary" class="summary-box"></div>
+    <div class="wheel-picker">
+      <select id="setYear"></select>
+      <select id="setMonth"></select>
+      <select id="setDay"></select>
+      <select id="setHour"></select>
+      <select id="setMinute"></select>
+    </div>
+    <div class="time-input-row">
+      <button id="addTimeBtn">➕ 添加此时段</button>
+    </div>
+    <div style="font-weight:600;margin:8px 0 4px 6px;color:#886b88;">📋 时段列表</div>
+    <div class="slot-list" id="slotListContainer"></div>
+    
+    <div style="margin-top:16px;text-align:center;">
+      <button id="clearAllBtn" class="btn-small btn-clear">🗑️ 一键清空所有时段</button>
     </div>
 
-    <div id="counsellorPanel" style="display:none;">
-        <div class="section-title">📌 设置可预约时间</div>
-        <div id="bookingSummary" class="summary-box"></div>
-        <div class="wheel-picker">
-            <select id="setYear"></select>
-            <select id="setMonth"></select>
-            <select id="setDay"></select>
-            <select id="setHour"></select>
-            <select id="setMinute"></select>
-        </div>
-        <div class="time-input-row">
-            <button id="addTimeBtn">➕ 添加此时段</button>
-        </div>
-        <div style="font-weight:600; margin:8px 0 4px 6px; color:#886b8e;">📋 时段列表</div>
-        <div class="slot-list" id="slotListContainer"></div>
-        <div class="warm-prompt">
-            ⚡ 编辑可修改预约人，取消可清空预约。
-        </div>
-    </div>
+    <div class="warm-prompt">⚡ 编辑可修改预约人，取消可清空预约。</div>
+  </div>
 
-    <div id="customerPanel">
-        <div class="section-title">🕒 可预约时段</div>
-        <div class="available-grid" id="availableSlotsContainer"></div>
-    </div>
+  <div id="customerPanel">
+    <div class="section-title">🕒 可预约时段</div>
+    <div class="date-tabs" id="dateTabs"></div>
+    <div class="available-grid" id="availableSlotsContainer"></div>
+  </div>
 </div>
 
 <script>
-(function() {
-    let timeSlots = [];
-    const ADMIN_PASSWORD = '555222'; // 已修改为你指定的密码
-    let isAdminAuthorized = false;
+(function(){
+let timeSlots = [];
+const ADMIN_PASSWORD = '555222';
+let isAdminAuthorized = false;
+let currentSelectedDate = null;
 
-    function load() {
-        const s = localStorage.getItem('psySlots');
-        if (s) timeSlots = JSON.parse(s);
+function load(){const s=localStorage.getItem('psySlots');if(s)timeSlots=JSON.parse(s)}
+function save(){localStorage.setItem('psySlots',JSON.stringify(timeSlots))}
+
+function renderSummary(){
+  const box=document.getElementById('bookingSummary');
+  const booked=timeSlots.filter(s=>s.bookedBy);
+  if(booked.length===0){box.innerText='📊 暂无顾客预约';return}
+  const grouped={};
+  booked.forEach(s=>{
+    if(!grouped[s.bookedBy])grouped[s.bookedBy]=[];
+    grouped[s.bookedBy].push(s.timeStr);
+  });
+  let txt='📊 已预约汇总：\n';
+  for(let name in grouped)txt+=`${name}：${grouped[name].join('、')}\n`;
+  box.innerText=txt;
+}
+
+function fillWheel(){
+  const Y=document.getElementById('setYear');
+  const M=document.getElementById('setMonth');
+  const D=document.getElementById('setDay');
+  const H=document.getElementById('setHour');
+  const Mi=document.getElementById('setMinute');
+  const now=new Date();
+  const y=now.getFullYear();
+  for(let i=y;i<=y+1;i++)Y.innerHTML+=`<option>${i}年</option>`;
+  for(let i=1;i<=12;i++)M.innerHTML+=`<option>${i}月</option>`;
+  for(let i=1;i<=31;i++)D.innerHTML+=`<option>${i}日</option>`;
+  for(let i=8;i<=22;i++)H.innerHTML+=`<option>${i}时</option>`;
+  
+  [0,15,30,45].forEach(m=>{
+    const mStr=String(m).padStart(2,'0');
+    Mi.innerHTML+=`<option>${mStr}分</option>`;
+  });
+}
+
+function getAvailableDates(){
+  const dates=new Set();
+  timeSlots.forEach(slot=>{
+    if(!slot.bookedBy){
+      const datePart=slot.timeStr.split(' ')[0];
+      dates.add(datePart);
     }
-    function save() {
-        localStorage.setItem('psySlots', JSON.stringify(timeSlots));
-    }
+  });
+  return Array.from(dates).sort();
+}
 
-    // 按顾客汇总所有预约时间
-    function renderSummary() {
-        const box = document.getElementById('bookingSummary');
-        const booked = timeSlots.filter(s => s.bookedBy);
-        if (booked.length === 0) {
-            box.innerText = '📊 暂无顾客预约';
-            return;
-        }
-        // 按姓名分组
-        const grouped = {};
-        booked.forEach(s => {
-            if (!grouped[s.bookedBy]) grouped[s.bookedBy] = [];
-            grouped[s.bookedBy].push(s.timeStr);
-        });
-        let txt = '📊 已预约汇总：\n';
-        for (let name in grouped) {
-            txt += `${name}：${grouped[name].join('、')}\n`;
-        }
-        box.innerText = txt;
-    }
+function renderDateTabs(){
+  const container=document.getElementById('dateTabs');
+  container.innerHTML='';
+  const dates=getAvailableDates();
+  if(dates.length===0){
+    container.innerHTML='<div style="padding:10px;color:#aaa;">暂无可预约日期</div>';
+    return;
+  }
+  if(!currentSelectedDate)currentSelectedDate=dates[0];
+  dates.forEach(date=>{
+    const isActive=date===currentSelectedDate;
+    container.innerHTML+=`
+      <div class="date-tab ${isActive?'active':''}" onclick="selectDate('${date}')">
+        ${date}
+      </div>`;
+  });
+}
 
-    function fillWheel() {
-        const Y = document.getElementById('setYear');
-        const M = document.getElementById('setMonth');
-        const D = document.getElementById('setDay');
-        const H = document.getElementById('setHour');
-        const Mi = document.getElementById('setMinute');
-        let now = new Date();
-        let y = now.getFullYear();
-        for (let i = y; i <= y + 1; i++) {
-            Y.innerHTML += `<option>${i}年</option>`;
-        }
-        for (let i = 1; i <= 12; i++) {
-            M.innerHTML += `<option>${i}月</option>`;
-        }
-        for (let i = 1; i <= 31; i++) {
-            D.innerHTML += `<option>${i}日</option>`;
-        }
-        for (let i = 8; i <= 22; i++) {
-            H.innerHTML += `<option>${i}时</option>`;
-        }
-        [0,10,20,30,40,50].forEach(m => {
-            Mi.innerHTML += `<option>${m}分</option>`;
-        });
-    }
+function checkAdminPassword(){
+  if(isAdminAuthorized)return true;
+  const pwd=prompt('请输入管理端密码：');
+  if(pwd===ADMIN_PASSWORD){
+    isAdminAuthorized=true;
+    return true;
+  }else{
+    alert('密码错误，无法进入管理端');
+    return false;
+  }
+}
 
-    // 密码验证
-    function checkAdminPassword() {
-        if (isAdminAuthorized) return true;
-        const pwd = prompt('请输入管理端密码：');
-        if (pwd === ADMIN_PASSWORD) {
-            isAdminAuthorized = true;
-            return true;
-        } else {
-            alert('密码错误，无法进入管理端');
-            return false;
-        }
-    }
+document.getElementById('tabCounsellor').onclick=()=>{
+  if(!checkAdminPassword()){
+    document.getElementById('tabCustomer').click();
+    return;
+  }
+  document.getElementById('counsellorPanel').style.display='block';
+  document.getElementById('customerPanel').style.display='none';
+  document.getElementById('tabCounsellor').classList.add('active');
+  document.getElementById('tabCustomer').classList.remove('active');
+  renderAdmin();
+};
 
-    document.getElementById('tabCounsellor').onclick = () => {
-        if (!checkAdminPassword()) {
-            document.getElementById('tabCustomer').click();
-            return;
-        }
-        document.getElementById('counsellorPanel').style.display = 'block';
-        document.getElementById('customerPanel').style.display = 'none';
-        document.getElementById('tabCounsellor').classList.add('active');
-        document.getElementById('tabCustomer').classList.remove('active');
-        renderAdmin();
-    };
-    document.getElementById('tabCustomer').onclick = () => {
-        document.getElementById('counsellorPanel').style.display = 'none';
-        document.getElementById('customerPanel').style.display = 'block';
-        document.getElementById('tabCounsellor').classList.remove('active');
-        document.getElementById('tabCustomer').classList.add('active');
-        renderUser();
-    };
+document.getElementById('tabCustomer').onclick=()=>{
+  document.getElementById('counsellorPanel').style.display='none';
+  document.getElementById('customerPanel').style.display='block';
+  document.getElementById('tabCounsellor').classList.remove('active');
+  document.getElementById('tabCustomer').classList.add('active');
+  renderDateTabs();
+  renderUser();
+};
 
-    function renderAdmin() {
-        const c = document.getElementById('slotListContainer');
-        c.innerHTML = '';
-        if (timeSlots.length === 0) {
-            c.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">暂无时段</div>';
-        } else {
-            timeSlots.forEach((slot, idx) => {
-                const isBook = slot.bookedBy;
-                c.innerHTML += `
-                <div class="slot-item">
-                    <div class="slot-time">${slot.timeStr}</div>
-                    <div class="slot-status ${isBook ? 'booked' : ''}">
-                        ${isBook ? '已约：' + isBook : '可预约'}
-                    </div>
-                    <div class="slot-actions">
-                        <button class="btn-small btn-edit" onclick="edit(${idx})">编辑</button>
-                        <button class="btn-small btn-cancel" onclick="del(${idx})">删除</button>
-                    </div>
-                </div>`;
-            });
-        }
-        renderSummary();
-    }
+function renderAdmin(){
+  const c=document.getElementById('slotListContainer');
+  c.innerHTML='';
+  if(timeSlots.length===0){
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;">暂无时段</div>';
+    return;
+  }
+  const groups={};
+  timeSlots.forEach((slot,idx)=>{
+    const date=slot.timeStr.split(' ')[0];
+    if(!groups[date])groups[date]=[];
+    groups[date].push({slot,idx});
+  });
+  Object.keys(groups).sort().forEach(date=>{
+    let groupHtml=`<div class="admin-date-group"><div class="admin-date-title">📅 ${date}</div>`;
+    groups[date].forEach(({slot,idx})=>{
+      const isBook=slot.bookedBy;
+      const timeOnly=slot.timeStr.split(' ')[1];
+      groupHtml+=`
+        <div class="slot-item">
+          <div class="slot-time">${timeOnly}</div>
+          <div class="slot-status ${isBook?'booked':''}">
+            ${isBook?'已约：'+isBook:'可预约'}
+          </div>
+          <div class="slot-actions">
+            <button class="btn-small btn-edit" onclick="edit(${idx})">编辑</button>
+            <button class="btn-small btn-cancel" onclick="del(${idx})">删除</button>
+          </div>
+        </div>`;
+    });
+    groupHtml+='</div>';
+    c.innerHTML+=groupHtml;
+  });
+  renderSummary();
+}
 
-    function renderUser() {
-        const c = document.getElementById('availableSlotsContainer');
-        c.innerHTML = '';
-        timeSlots.forEach((slot, idx) => {
-            if (slot.bookedBy) return;
-            c.innerHTML += `
-            <div class="book-card">
-                <div class="book-time">${slot.timeStr}</div>
-                <button class="book-btn" onclick="book(${idx})">立即预约</button>
-            </div>`;
-        });
-    }
-
-    document.getElementById('addTimeBtn').onclick = () => {
-        const y = document.getElementById('setYear').value.replace('年','');
-        const m = document.getElementById('setMonth').value.replace('月','');
-        const d = document.getElementById('setDay').value.replace('日','');
-        const h = document.getElementById('setHour').value.replace('时','');
-        const mi = document.getElementById('setMinute').value.replace('分','');
-        const str = `${y}.${m}.${d} ${h}:${mi}`;
-        timeSlots.push({ timeStr: str, bookedBy: null });
-        save();
-        renderAdmin();
-    };
-
-    window.book = (i) => {
-        const name = prompt('请写下姓名即可');
-        if (!name) return;
-        timeSlots[i].bookedBy = name;
-        save();
-        renderUser();
-        alert('预约成功！');
-    };
-
-    window.edit = (i) => {
-        const name = prompt('修改预约人姓名：', timeSlots[i].bookedBy || '');
-        if (name === null) return;
-        timeSlots[i].bookedBy = name.trim() || null;
-        save();
-        renderAdmin();
-    };
-
-    window.del = (i) => {
-        if (!confirm('确定删除？')) return;
-        timeSlots.splice(i, 1);
-        save();
-        renderAdmin();
-    };
-
-    load();
-    fillWheel();
-    renderUser();
-})();
-</script>
-</body>
-</html>
-
+function renderUser(){
+  const c=document.getElementById('availableSlotsContainer');
+  c.innerHTML='';
+  if(!currentSelectedDate)return;
+  const filtered=timeSlots.filter(s=>s.timeStr.startsWith(currentSelectedDate)&&!s.bookedBy);
+  if(filtered.length===0){
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;">当天暂无可预约时段</div>';
+    return;
+  }
+  filtered.forEach(slot=>{
+    const idx=timeSlots.indexOf(slot
