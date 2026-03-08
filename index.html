@@ -229,4 +229,71 @@ function renderUser(){
     return;
   }
   filtered.forEach(slot=>{
-    const idx=timeSlots.indexOf(slot
+    const idx=timeSlots.indexOf(slot);
+    const timeOnly=slot.timeStr.split(' ')[1];
+    c.innerHTML+=`
+      <div class="book-card">
+        <div class="book-time">${timeOnly}</div>
+        <button class="book-btn" onclick="book(${idx})">立即预约</button>
+      </div>`;
+  });
+}
+
+document.getElementById('addTimeBtn').onclick=()=>{
+  const y=document.getElementById('setYear').value.replace('年','');
+  const m=document.getElementById('setMonth').value.replace('月','');
+  const d=document.getElementById('setDay').value.replace('日','');
+  const h=document.getElementById('setHour').value.replace('时','');
+  const mi=document.getElementById('setMinute').value.replace('分','');
+  const str=`${y}.${m}.${d} ${h}:${mi}`;
+  timeSlots.push({timeStr:str,bookedBy:null});
+  save();
+  renderAdmin();
+};
+
+document.getElementById('clearAllBtn').onclick=()=>{
+  if(!confirm('确定要清空所有时段吗？此操作会删除所有已设置的时段和预约信息，不可恢复！'))return;
+  timeSlots=[];
+  save();
+  renderAdmin();
+  alert('已清空所有时段');
+};
+
+window.selectDate=(date)=>{
+  currentSelectedDate=date;
+  renderDateTabs();
+  renderUser();
+};
+
+window.book=(i)=>{
+  const name=prompt('请写下姓名即可');
+  if(!name)return;
+  timeSlots[i].bookedBy=name;
+  save();
+  renderUser();
+  alert('预约成功！');
+};
+
+window.edit=(i)=>{
+  const name=prompt('修改预约人姓名：',timeSlots[i].bookedBy||'');
+  if(name===null)return;
+  timeSlots[i].bookedBy=name.trim()||null;
+  save();
+  renderAdmin();
+};
+
+window.del=(i)=>{
+  if(!confirm('确定删除？'))return;
+  timeSlots.splice(i,1);
+  save();
+  renderAdmin();
+};
+
+load();
+fillWheel();
+renderDateTabs();
+renderUser();
+})();
+</script>
+</body>
+</html>
