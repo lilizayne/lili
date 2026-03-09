@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- 强制不缓存，彻底解决两个微信显示不一样 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>预约小助手</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -38,44 +42,44 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,PingFan
 .date-tab{padding:10px 16px;border-radius:20px;background:#fdf5fc;border:1px solid #f0d9ed;cursor:pointer;transition:.2s}
 .date-tab.active{background:#d984cc;color:#fff;border-color:#d984cc}
 .admin-date-group{margin-bottom:20px}
-.admin-date-title{font-size:1.1rem;font-weight:700;color:#995c9c;margin-bottom:10px;padding-left:4px}
+.admin-date-title{font-size:1.3rem;font-weight:800;color:#995c9c;margin-bottom:12px;padding-left:4px}
 </style>
 </head>
 <body>
 <div class="app-container">
-  <div class="role-header">
-    <div class="role-tab" id="tabCounsellor">👩‍⚕️ 管理端</div>
-    <div class="role-tab active" id="tabCustomer">🥰 预约端</div>
-  </div>
+<div class="role-header">
+<div class="role-tab" id="tabCounsellor">👩‍⚕️ 管理端</div>
+<div class="role-tab active" id="tabCustomer">🥰 预约端</div>
+</div>
 
-  <div id="counsellorPanel" style="display:none;">
-    <div class="section-title">📌 设置可预约时间</div>
-    <div id="bookingSummary" class="summary-box"></div>
-    <div class="wheel-picker">
-      <select id="setYear"></select>
-      <select id="setMonth"></select>
-      <select id="setDay"></select>
-      <select id="setHour"></select>
-      <select id="setMinute"></select>
-    </div>
-    <div class="time-input-row">
-      <button id="addTimeBtn">➕ 添加此时段</button>
-    </div>
-    <div style="font-weight:600;margin:8px 0 4px 6px;color:#886b88;">📋 时段列表</div>
-    <div class="slot-list" id="slotListContainer"></div>
-    
-    <div style="margin-top:16px;text-align:center;">
-      <button id="clearAllBtn" class="btn-small btn-clear">🗑️ 一键清空所有时段</button>
-    </div>
+<div id="counsellorPanel" style="display:none;">
+<div class="section-title">📌 设置可预约时间</div>
+<div id="bookingSummary" class="summary-box"></div>
+<div class="wheel-picker">
+<select id="setYear"></select>
+<select id="setMonth"></select>
+<select id="setDay"></select>
+<select id="setHour"></select>
+<select id="setMinute"></select>
+</div>
+<div class="time-input-row">
+<button id="addTimeBtn">➕ 添加此时段</button>
+</div>
+<div style="font-weight:600;margin:8px 0 4px 6px;color:#886b88;">📋 时段列表</div>
+<div class="slot-list" id="slotListContainer"></div>
 
-    <div class="warm-prompt">⚡ 编辑可修改预约人，取消可清空预约。</div>
-  </div>
+<div style="margin-top:24px;text-align:center;">
+<button id="clearAllBtn" class="btn-small btn-clear">🗑️ 一键清空所有时段</button>
+</div>
 
-  <div id="customerPanel">
-    <div class="section-title">🕒 可预约时段</div>
-    <div class="date-tabs" id="dateTabs"></div>
-    <div class="available-grid" id="availableSlotsContainer"></div>
-  </div>
+<div class="warm-prompt">⚡ 编辑可修改预约人，取消可清空预约。</div>
+</div>
+
+<div id="customerPanel">
+<div class="section-title">🕒 可预约时段</div>
+<div class="date-tabs" id="dateTabs"></div>
+<div class="available-grid" id="availableSlotsContainer"></div>
+</div>
 </div>
 
 <script>
@@ -85,212 +89,247 @@ const ADMIN_PASSWORD = '555222';
 let isAdminAuthorized = false;
 let currentSelectedDate = null;
 
-function load(){const s=localStorage.getItem('psySlots');if(s)timeSlots=JSON.parse(s)}
+function clearLocalData() {
+try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
+}
+
+function load(){
+clearLocalData();
+const s=localStorage.getItem('psySlots');
+if(s)timeSlots=JSON.parse(s);
+}
 function save(){localStorage.setItem('psySlots',JSON.stringify(timeSlots))}
 
 function renderSummary(){
-  const box=document.getElementById('bookingSummary');
-  const booked=timeSlots.filter(s=>s.bookedBy);
-  if(booked.length===0){box.innerText='📊 暂无顾客预约';return}
-  const grouped={};
-  booked.forEach(s=>{
-    if(!grouped[s.bookedBy])grouped[s.bookedBy]=[];
-    grouped[s.bookedBy].push(s.timeStr);
-  });
-  let txt='📊 已预约汇总：\n';
-  for(let name in grouped)txt+=`${name}：${grouped[name].join('、')}\n`;
-  box.innerText=txt;
+const box=document.getElementById('bookingSummary');
+const booked=timeSlots.filter(s=>s.bookedBy);
+if(booked.length===0){box.innerText='📊 暂无顾客预约';return}
+const grouped={};
+booked.forEach(s=>{
+if(!grouped[s.bookedBy])grouped[s.bookedBy]=[];
+grouped[s.bookedBy].push(s.timeStr);
+});
+let txt='📊 已预约汇总：\n';
+for(let name in grouped)txt+=`${name}：${grouped[name].join('、')}\n`;
+box.innerText=txt;
 }
 
 function fillWheel(){
-  const Y=document.getElementById('setYear');
-  const M=document.getElementById('setMonth');
-  const D=document.getElementById('setDay');
-  const H=document.getElementById('setHour');
-  const Mi=document.getElementById('setMinute');
-  const now=new Date();
-  const y=now.getFullYear();
-  for(let i=y;i<=y+1;i++)Y.innerHTML+=`<option>${i}年</option>`;
-  for(let i=1;i<=12;i++)M.innerHTML+=`<option>${i}月</option>`;
-  for(let i=1;i<=31;i++)D.innerHTML+=`<option>${i}日</option>`;
-  for(let i=8;i<=22;i++)H.innerHTML+=`<option>${i}时</option>`;
-  
-  [0,15,30,45].forEach(m=>{
-    const mStr=String(m).padStart(2,'0');
-    Mi.innerHTML+=`<option>${mStr}分</option>`;
-  });
+const Y=document.getElementById('setYear');
+const M=document.getElementById('setMonth');
+const D=document.getElementById('setDay');
+const H=document.getElementById('setHour');
+const Mi=document.getElementById('setMinute');
+const now=new Date();
+const y=now.getFullYear();
+for(let i=y;i<=y+1;i++)Y.innerHTML+=`<option>${i}年</option>`;
+for(let i=1;i<=12;i++)M.innerHTML+=`<option>${i}月</option>`;
+for(let i=1;i<=31;i++)D.innerHTML+=`<option>${i}日</option>`;
+for(let i=8;i<=22;i++)H.innerHTML+=`<option>${i}时</option>`;
+
+[0,15,30,45].forEach(m=>{
+const mStr=String(m).padStart(2,'0');
+Mi.innerHTML+=`<option>${mStr}分</option>`;
+});
 }
 
 function getAvailableDates(){
-  const dates=new Set();
-  timeSlots.forEach(slot=>{
-    if(!slot.bookedBy){
-      const datePart=slot.timeStr.split(' ')[0];
-      dates.add(datePart);
-    }
-  });
-  return Array.from(dates).sort();
+const dates=new Set();
+timeSlots.forEach(slot=>{
+if(!slot.bookedBy){
+const datePart=slot.timeStr.split(' ')[0];
+dates.add(datePart);
+}
+});
+return Array.from(dates).sort();
 }
 
 function renderDateTabs(){
-  const container=document.getElementById('dateTabs');
-  container.innerHTML='';
-  const dates=getAvailableDates();
-  if(dates.length===0){
-    container.innerHTML='<div style="padding:10px;color:#aaa;">暂无可预约日期</div>';
-    return;
-  }
-  if(!currentSelectedDate)currentSelectedDate=dates[0];
-  dates.forEach(date=>{
-    const isActive=date===currentSelectedDate;
-    container.innerHTML+=`
-      <div class="date-tab ${isActive?'active':''}" onclick="selectDate('${date}')">
-        ${date}
-      </div>`;
-  });
+const container=document.getElementById('dateTabs');
+container.innerHTML='';
+const dates=getAvailableDates();
+if(dates.length===0){
+container.innerHTML='<div style="padding:10px;color:#aaa;">暂无可预约日期</div>';
+return;
+}
+if(!currentSelectedDate)currentSelectedDate=dates[0];
+dates.forEach(date=>{
+const isActive=date===currentSelectedDate;
+container.innerHTML+=`
+<div class="date-tab ${isActive?'active':''}" onclick="selectDate('${date}')">
+${date}
+</div>`;
+});
 }
 
 function checkAdminPassword(){
-  if(isAdminAuthorized)return true;
-  const pwd=prompt('请输入管理端密码：');
-  if(pwd===ADMIN_PASSWORD){
-    isAdminAuthorized=true;
-    return true;
-  }else{
-    alert('密码错误，无法进入管理端');
-    return false;
-  }
+if(isAdminAuthorized)return true;
+const pwd=prompt('请输入管理端密码：');
+if(pwd===ADMIN_PASSWORD){
+isAdminAuthorized=true;
+return true;
+}else{
+alert('密码错误，无法进入管理端');
+return false;
+}
 }
 
 document.getElementById('tabCounsellor').onclick=()=>{
-  if(!checkAdminPassword()){
-    document.getElementById('tabCustomer').click();
-    return;
-  }
-  document.getElementById('counsellorPanel').style.display='block';
-  document.getElementById('customerPanel').style.display='none';
-  document.getElementById('tabCounsellor').classList.add('active');
-  document.getElementById('tabCustomer').classList.remove('active');
-  renderAdmin();
+if(!checkAdminPassword()){
+document.getElementById('tabCustomer').click();
+return;
+}
+document.getElementById('counsellorPanel').style.display='block';
+document.getElementById('customerPanel').style.display='none';
+document.getElementById('tabCounsellor').classList.add('active');
+document.getElementById('tabCustomer').classList.remove('active');
+renderAdmin();
 };
 
 document.getElementById('tabCustomer').onclick=()=>{
-  document.getElementById('counsellorPanel').style.display='none';
-  document.getElementById('customerPanel').style.display='block';
-  document.getElementById('tabCounsellor').classList.remove('active');
-  document.getElementById('tabCustomer').classList.add('active');
-  renderDateTabs();
-  renderUser();
+document.getElementById('counsellorPanel').style.display='none';
+document.getElementById('customerPanel').style.display='block';
+document.getElementById('tabCounsellor').classList.remove('active');
+document.getElementById('tabCustomer').classList.add('active');
+renderDateTabs();
+renderUser();
 };
 
 function renderAdmin(){
-  const c=document.getElementById('slotListContainer');
-  c.innerHTML='';
-  if(timeSlots.length===0){
-    c.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;">暂无时段</div>';
-    return;
-  }
-  const groups={};
-  timeSlots.forEach((slot,idx)=>{
-    const date=slot.timeStr.split(' ')[0];
-    if(!groups[date])groups[date]=[];
-    groups[date].push({slot,idx});
-  });
-  Object.keys(groups).sort().forEach(date=>{
-    let groupHtml=`<div class="admin-date-group"><div class="admin-date-title">📅 ${date}</div>`;
-    groups[date].forEach(({slot,idx})=>{
-      const isBook=slot.bookedBy;
-      const timeOnly=slot.timeStr.split(' ')[1];
-      groupHtml+=`
-        <div class="slot-item">
-          <div class="slot-time">${timeOnly}</div>
-          <div class="slot-status ${isBook?'booked':''}">
-            ${isBook?'已约：'+isBook:'可预约'}
-          </div>
-          <div class="slot-actions">
-            <button class="btn-small btn-edit" onclick="edit(${idx})">编辑</button>
-            <button class="btn-small btn-cancel" onclick="del(${idx})">删除</button>
-          </div>
-        </div>`;
-    });
-    groupHtml+='</div>';
-    c.innerHTML+=groupHtml;
-  });
-  renderSummary();
+const c=document.getElementById('slotListContainer');
+c.innerHTML='';
+if(timeSlots.length===0){
+c.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;">暂无时段</div>';
+return;
+}
+const groups={};
+timeSlots.forEach((slot,idx)=>{
+const date=slot.timeStr.split(' ')[0];
+if(!groups[date])groups[date]=[];
+groups[date].push({slot,idx});
+});
+Object.keys(groups).sort().forEach(date=>{
+let groupHtml=`<div class="admin-date-group"><div class="admin-date-title">📅 ${date}</div>`;
+groups[date].forEach(({slot,idx})=>{
+const isBook=slot.bookedBy;
+const timeOnly=slot.timeStr.split(' ')[1];
+groupHtml+=`
+<div class="slot-item">
+<div class="slot-time">${timeOnly}</div>
+<div class="slot-status ${isBook?'booked':''}">
+${isBook?'已约：'+isBook:'可预约'}
+</div>
+<div class="slot-actions">
+<button class="btn-small btn-edit" onclick="edit(${idx})">编辑</button>
+<button class="btn-small btn-cancel" onclick="del(${idx})">删除</button>
+</div>
+</div>`;
+});
+groupHtml+='</div>';
+c.innerHTML+=groupHtml;
+});
+renderSummary();
 }
 
 function renderUser(){
-  const c=document.getElementById('availableSlotsContainer');
-  c.innerHTML='';
-  if(!currentSelectedDate)return;
-  const filtered=timeSlots.filter(s=>s.timeStr.startsWith(currentSelectedDate)&&!s.bookedBy);
-  if(filtered.length===0){
-    c.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;">当天暂无可预约时段</div>';
-    return;
-  }
-  filtered.forEach(slot=>{
-    const idx=timeSlots.indexOf(slot);
-    const timeOnly=slot.timeStr.split(' ')[1];
-    c.innerHTML+=`
-      <div class="book-card">
-        <div class="book-time">${timeOnly}</div>
-        <button class="book-btn" onclick="book(${idx})">立即预约</button>
-      </div>`;
-  });
+const c=document.getElementById('availableSlotsContainer');
+c.innerHTML='';
+if(!currentSelectedDate)return;
+const filtered=timeSlots.filter(s=>s.timeStr.startsWith(currentSelectedDate)&&!s.bookedBy);
+if(filtered.length===0){
+c.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;">当天暂无可预约时段</div>';
+return;
+}
+filtered.forEach(slot=>{
+const idx=timeSlots.indexOf(slot);
+const timeOnly=slot.timeStr.split(' ')[1];
+c.innerHTML+=`
+<div class="book-card">
+<div class="book-time">${timeOnly}</div>
+<button class="book-btn" onclick="book(${idx})">立即预约</button>
+</div>`;
+});
 }
 
+window.selectDate = (date) => {
+currentSelectedDate = date;
+renderDateTabs();
+renderUser();
+};
+
+window.edit = (idx) => {
+const slot=timeSlots[idx];
+if(!slot.bookedBy){
+const name=prompt('请输入预约人姓名：');
+if(name){
+slot.bookedBy=name;
+save();
+renderAdmin();
+renderUser();
+}
+}else{
+const name=prompt('修改预约人姓名：',slot.bookedBy);
+if(name!==null){
+slot.bookedBy=name;
+save();
+renderAdmin();
+renderUser();
+}
+}
+};
+
+window.del = (idx) => {
+if(confirm('确定要删除/清空这个时段吗？')){
+timeSlots[idx].bookedBy=null;
+save();
+renderAdmin();
+renderUser();
+}
+};
+
+window.book = (idx) => {
+const name=prompt('请输入你的姓名：');
+if(name){
+timeSlots[idx].bookedBy=name;
+save();
+alert('预约成功！');
+renderAdmin();
+renderUser();
+}
+};
+
 document.getElementById('addTimeBtn').onclick=()=>{
-  const y=document.getElementById('setYear').value.replace('年','');
-  const m=document.getElementById('setMonth').value.replace('月','');
-  const d=document.getElementById('setDay').value.replace('日','');
-  const h=document.getElementById('setHour').value.replace('时','');
-  const mi=document.getElementById('setMinute').value.replace('分','');
-  const str=`${y}.${m}.${d} ${h}:${mi}`;
-  timeSlots.push({timeStr:str,bookedBy:null});
-  save();
-  renderAdmin();
+const Y=document.getElementById('setYear').value.replace('年','');
+const M=document.getElementById('setMonth').value.replace('月','').padStart(2,'0');
+const D=document.getElementById('setDay').value.replace('日','').padStart(2,'0');
+const H=document.getElementById('setHour').value.replace('时','').padStart(2,'0');
+const Mi=document.getElementById('setMinute').value.replace('分','');
+const timeStr=`${Y}-${M}-${D} ${H}:${Mi}`;
+const exists=timeSlots.some(s=>s.timeStr===timeStr);
+if(exists){
+alert('该时段已存在！');
+return;
+}
+timeSlots.push({timeStr,bookedBy:null});
+save();
+renderAdmin();
+renderDateTabs();
+renderUser();
 };
 
 document.getElementById('clearAllBtn').onclick=()=>{
-  if(!confirm('确定要清空所有时段吗？此操作会删除所有已设置的时段和预约信息，不可恢复！'))return;
-  timeSlots=[];
-  save();
-  renderAdmin();
-  alert('已清空所有时段');
-};
-
-window.selectDate=(date)=>{
-  currentSelectedDate=date;
-  renderDateTabs();
-  renderUser();
-};
-
-window.book=(i)=>{
-  const name=prompt('请写下姓名即可');
-  if(!name)return;
-  timeSlots[i].bookedBy=name;
-  save();
-  renderUser();
-  alert('预约成功！');
-};
-
-window.edit=(i)=>{
-  const name=prompt('修改预约人姓名：',timeSlots[i].bookedBy||'');
-  if(name===null)return;
-  timeSlots[i].bookedBy=name.trim()||null;
-  save();
-  renderAdmin();
-};
-
-window.del=(i)=>{
-  if(!confirm('确定删除？'))return;
-  timeSlots.splice(i,1);
-  save();
-  renderAdmin();
+if(confirm('确定要清空所有时段吗？此操作不可恢复！')){
+timeSlots=[];
+save();
+renderAdmin();
+renderDateTabs();
+renderUser();
+}
 };
 
 load();
 fillWheel();
+renderAdmin();
 renderDateTabs();
 renderUser();
 })();
